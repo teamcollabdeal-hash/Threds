@@ -15,7 +15,8 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  const { data: { user } } = await db.auth.getUser();
+  const { data } = await db.auth.getClaims();
+  const user = data?.claims?.sub ?? null;
   const path = request.nextUrl.pathname;
   const isPublic = path.startsWith("/login") || path.startsWith("/auth") || path === "/api/threads/callback" || path.startsWith("/api/cron/");
   if (!user && !isPublic) {

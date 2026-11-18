@@ -1,16 +1,20 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { serverDb } from "./supabase/server";
 import type { Role } from "./types";
 
 const rank: Record<Role, number> = { viewer: 1, editor: 2, admin: 3, owner: 4 };
 
-export async function getSession() {
+/** Один раз на запит (cache). JWT перевіряється локально через getClaims — без зайвого запиту до Auth. */
+export const getSession = cache(async () => {
   const db = await serverDb();
-  const { data: { user } } = await db.auth.getUser();
-  if (!user) return null;
+  const { data } = await db.auth.getClaims();
+  const c = data?.claims;
+  if (!c?.sub) return null;
+  const user = { id: c.sub as string, email: (c.email as string | undefined) ?? null };
   const { data: profile } = await db.from("profiles").select("role, full_name, email").eq("id", user.id).single();
   return { user, role: (profile?.role ?? "viewer") as Role, profile };
-}
+});
 
 export async function requireUser() {
   const s = await getSession();
