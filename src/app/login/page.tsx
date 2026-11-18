@@ -11,13 +11,14 @@ export default function Login() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
+  const [confirmErr] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("error") === "confirm");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setMsg(null);
     const db = browserDb();
     const { error, data } = mode === "in"
       ? await db.auth.signInWithPassword({ email, password })
-      : await db.auth.signUp({ email, password });
+      : await db.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/confirm` } });
     setBusy(false);
     if (error) return setMsg(error.message);
     if (mode === "up" && !data.session) return setMsg("Перевірте пошту для підтвердження реєстрації.");
@@ -35,12 +36,13 @@ export default function Login() {
         <input className="input mb-3" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <label className="label">Пароль</label>
         <input className="input mb-4" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+        {confirmErr && !msg && <p className="mb-3 text-sm text-red-600">Посилання підтвердження недійсне або застаріло. Увійдіть або зареєструйтеся ще раз.</p>}
         {msg && <p className="mb-3 text-sm text-red-600">{msg}</p>}
         <button className="btn-primary w-full" disabled={busy}>{mode === "in" ? "Увійти" : "Створити акаунт"}</button>
         <button type="button" className="mt-3 w-full text-xs text-muted hover:text-ink" onClick={() => setMode(mode === "in" ? "up" : "in")}>
           {mode === "in" ? "Немає акаунта? Зареєструватися" : "Вже є акаунт? Увійти"}
         </button>
-        <p className="mt-4 text-[11px] leading-relaxed text-muted">Перший зареєстрований користувач отримує роль owner. Наступні — viewer, доки owner не змінить роль у Settings.</p>
+        <p className="mt-4 text-[11px] leading-relaxed text-muted">Перший зареєстрований користувач отримує роль owner. Наступні отримують доступ лише після схвалення owner’ом у Settings.</p>
       </form>
     </div>
   );

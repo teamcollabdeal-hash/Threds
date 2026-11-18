@@ -9,7 +9,11 @@ export async function GET() {
     return NextResponse.json({ error: (e as Error).message }, { status: 403 });
   }
   const state = randomBytes(24).toString("base64url");
-  const res = NextResponse.redirect(authorizeUrl(state));
+  let url: string;
+  try { url = await authorizeUrl(state); } catch (e) {
+    return NextResponse.redirect(new URL(`/accounts?error=${encodeURIComponent((e as Error).message)}`, process.env.APP_URL ?? "http://localhost:3000"));
+  }
+  const res = NextResponse.redirect(url);
   res.cookies.set("mt_oauth_state", state, { httpOnly: true, secure: true, sameSite: "lax", maxAge: 600, path: "/" });
   return res;
 }

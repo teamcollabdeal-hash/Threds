@@ -102,7 +102,7 @@ export function demoDb(): any {
   return {
     from: builder,
     rpc: async () => ({ data: overview, error: null }),
-    auth: { getUser: async () => ({ data: { user: { id: "u1", email: "anton@ardis.kyiv.ua" } } }), signOut: async () => ({}) },
+    auth: { getClaims: async () => ({ data: { claims: { sub: "u1", email: "anton@ardis.kyiv.ua" } } }), getUser: async () => ({ data: { user: { id: "u1", email: "anton@ardis.kyiv.ua" } } }), signOut: async () => ({}) },
     storage: { from: () => ({}) },
   };
 }

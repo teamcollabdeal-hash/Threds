@@ -1,4 +1,4 @@
-export type Role = "owner" | "admin" | "editor" | "viewer";
+export type Role = "owner" | "admin" | "editor" | "viewer" | "pending";
 export type AccountStatus = "active" | "paused" | "auth_error" | "rate_limited" | "disconnected";
 export type PublicationStatus =
   | "draft" | "scheduled" | "queued" | "publishing" | "published" | "failed" | "cancelled" | "paused";

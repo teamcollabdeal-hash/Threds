@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { serverDb } from "./supabase/server";
 import type { Role } from "./types";
 
-const rank: Record<Role, number> = { viewer: 1, editor: 2, admin: 3, owner: 4 };
+const rank: Record<Role, number> = { pending: 0, viewer: 1, editor: 2, admin: 3, owner: 4 };
 
 /** Один раз на запит (cache). JWT перевіряється локально через getClaims — без зайвого запиту до Auth. */
 export const getSession = cache(async () => {
@@ -13,12 +13,13 @@ export const getSession = cache(async () => {
   if (!c?.sub) return null;
   const user = { id: c.sub as string, email: (c.email as string | undefined) ?? null };
   const { data: profile } = await db.from("profiles").select("role, full_name, email").eq("id", user.id).single();
-  return { user, role: (profile?.role ?? "viewer") as Role, profile };
+  return { user, role: (profile?.role ?? "pending") as Role, profile };
 });
 
 export async function requireUser() {
   const s = await getSession();
   if (!s) redirect("/login");
+  if (s.role === "pending") redirect("/pending");
   return s;
 }
 

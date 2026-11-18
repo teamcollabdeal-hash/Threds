@@ -18,7 +18,8 @@ export async function proxy(request: NextRequest) {
   const { data } = await db.auth.getClaims();
   const user = data?.claims?.sub ?? null;
   const path = request.nextUrl.pathname;
-  const isPublic = path.startsWith("/login") || path.startsWith("/auth") || path === "/api/threads/callback" || path.startsWith("/api/cron/");
+  const isPublic = path.startsWith("/login") || path.startsWith("/auth") || path === "/privacy" || path === "/api/threads/callback"
+    || path === "/api/threads/deauthorize" || path === "/api/threads/delete" || path.startsWith("/api/cron/");
   if (!user && !isPublic) {
     if (path.startsWith("/api/")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     return NextResponse.redirect(new URL("/login", request.url));

@@ -4,6 +4,7 @@ import { getSession, can } from "@/lib/auth";
 import { PageHeader, Card, Empty } from "@/components/ui";
 import { AccountTable } from "@/components/AccountTable";
 import { createGroup, deleteGroup } from "@/app/actions/accounts";
+import { getThreadsCreds } from "@/lib/threads/config";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
     db.from("account_stats").select("*"),
   ]);
   const admin = can(s!.role, "admin");
+  const creds = await getThreadsCreds();
   let list = accounts ?? [];
   if (sp.status) list = list.filter((a) => a.status === sp.status);
   if (sp.group) {
@@ -30,7 +32,23 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
   return (
     <>
       <PageHeader title="Accounts" subtitle={`${accounts?.length ?? 0} підключених Threads-акаунтів`}
-        actions={admin && <a href="/api/threads/connect" className="btn-primary">+ Підключити акаунт</a>} />
+        actions={admin && creds && <a href="/api/threads/connect" className="btn-primary">+ Підключити акаунт</a>} />
+
+      {!creds && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Щоб підключати акаунти, спершу вкажіть ключі застосунку Meta в <Link href="/settings" className="font-medium underline">Settings → Threads API</Link>.
+        </div>
+      )}
+      {creds && admin && (accounts?.length ?? 0) === 0 && (
+        <div className="mb-4 rounded-lg border border-line px-4 py-3 text-sm">
+          <div className="mb-1 font-medium">Як підключити акаунт</div>
+          <ol className="list-decimal space-y-0.5 pl-4 text-muted">
+            <li>Акаунт має бути доданий у Threads Testers і прийняти запрошення.</li>
+            <li>У цьому браузері відкрийте threads.net і увійдіть саме в той акаунт.</li>
+            <li>Натисніть «Підключити акаунт» і підтвердіть доступ. Для наступного — вийдіть із Threads, увійдіть в інший і повторіть.</li>
+          </ol>
+        </div>
+      )}
 
       {sp.connected && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">Акаунт @{sp.connected} підключено.</div>}
       {sp.error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-800">Помилка підключення: {sp.error}</div>}
